@@ -71,10 +71,12 @@ func buildEnv(r *http.Request, urlScheme, serverName, serverPort string, errs io
 	if ct := r.Header.Get("Content-Type"); ct != "" {
 		env["CONTENT_TYPE"] = ct
 	}
+	// net/http parses the request's Content-Length into r.ContentLength and
+	// removes it from the header map, so read it from there: a determinate
+	// length (>= 0) becomes CONTENT_LENGTH; an unknown / chunked length (-1) is
+	// omitted, matching the Rack SPEC.
 	if r.ContentLength >= 0 {
-		if _, ok := r.Header["Content-Length"]; ok {
-			env["CONTENT_LENGTH"] = strconv.FormatInt(r.ContentLength, 10)
-		}
+		env["CONTENT_LENGTH"] = strconv.FormatInt(r.ContentLength, 10)
 	}
 
 	for name, values := range r.Header {
